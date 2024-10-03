@@ -29,6 +29,8 @@ public class LivePhotoConv.Sample2Img {
     Gst.Sample sample;
     string filename;
     string output_format;
+    bool make_backup;
+    FileCreateFlags file_create_flags;
 
     /**
      * Constructor for the Sample2Img class.
@@ -37,10 +39,13 @@ public class LivePhotoConv.Sample2Img {
      * @param filename The name of the output file.
      * @param output_format The format of the output file.
      */
-    public Sample2Img (owned Gst.Sample sample, string filename, string output_format) {
+    public Sample2Img (owned Gst.Sample sample, string filename, string output_format,
+                       FileCreateFlags file_create_flags = FileCreateFlags.REPLACE_DESTINATION, bool make_backup = false) {
         this.sample = sample;
         this.filename = filename;
         this.output_format = output_format;
+        this.file_create_flags = file_create_flags;
+        this.make_backup = make_backup;
     }
 
     /**
@@ -69,7 +74,9 @@ public class LivePhotoConv.Sample2Img {
             width * 3
         );
 
-        pixbuf.save (filename, output_format);
+        var output_stream = File.new_for_commandline_arg (filename).replace (null, make_backup, file_create_flags);
+        pixbuf.save_to_stream (output_stream, output_format);
+        output_stream.close ();
         Reporter.info ("Exported image", filename);
 
         if (metadata != null) {
